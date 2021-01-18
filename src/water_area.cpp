@@ -31,7 +31,25 @@ WaterArea3D::WaterArea3D() {
 	m_water_height = 0;
 }
 
-void WaterArea3D::update_water_heights(PackedVector3Array &points) {
+Vector3 WaterArea::get_flow_direction(const Vector3 &position) {
+	PoolVector3Array points;
+	points.append(position);
+	ScriptInstance *script = get_script_instance();
+	if (script && script->has_method("_get_water_flow")) {
+		points = get_script_instance()->call("_get_water_flow", points);
+	} else {
+		PoolVector3Array::Write write_points = points.write();
+		for (int i = 0; i < points.size(); i++)
+			write_points[i] = m_flow_direction;
+	}
+	if (points.size() > 0) {
+		printf("Flow vector at %f, %f, %f = %f, %f, %f\n", position.x, position.y, position.z, points[0].x, points[0].y, points[0].z);
+		return points[0];
+	} else
+		return Vector3();
+}
+
+void WaterArea::update_water_heights(PoolVector3Array &points) {
 	ScriptInstance *script = get_script_instance();
 	if (script && script->has_method("_get_water_heights")) {
 		points = get_script_instance()->call("_get_water_heights", points);
